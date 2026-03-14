@@ -83,6 +83,7 @@ type model struct {
 	chosen      string
 	height      int
 	width       int
+	fromFS      bool // true when showing filesystem search results
 }
 
 func initialModel(a agent, sessions []session, query string) model {
@@ -164,8 +165,12 @@ func (m model) listHeight() int {
 func (m model) View() string {
 	var b strings.Builder
 
+	label := agentLabel(m.activeAgent)
+	if m.fromFS {
+		label += styleDim.Render("  (filesystem search)")
+	}
 	b.WriteString(styleHeader.Render(
-		fmt.Sprintf("  az  —  %s", styleAgent.Render(agentLabel(m.activeAgent))),
+		fmt.Sprintf("  az  —  %s", styleAgent.Render(label)),
 	))
 	b.WriteByte('\n')
 
@@ -276,14 +281,33 @@ func main() {
 		return sessions[i].Mtime > sessions[j].Mtime
 	})
 
+	// If a query was given but produces no session matches, fall back to a
+	// live filesystem search so the user always gets a result.
+	fromFS := false
+	if query != "" && len(filterSessions(query, sessions)) == 0 {
+		fsDirs := findDirs(query, defaultSearchRoots(), 4)
+		if len(fsDirs) == 1 {
+			// Exactly one filesystem match — open immediately, no TUI needed.
+			fmt.Println(fsDirs[0].Path)
+			return
+		}
+		if len(fsDirs) > 1 {
+			sessions = fsDirs
+			fromFS = true
+		}
+		// len == 0: fall through to TUI showing "no matches"
+	}
+
 	tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "az: cannot open /dev/tty:", err)
 		os.Exit(1)
 	}
 
+	m := initialModel(activeAgent, sessions, query)
+	m.fromFS = fromFS
 	p := tea.NewProgram(
-		initialModel(activeAgent, sessions, query),
+		m,
 		tea.WithInput(tty),
 		tea.WithOutput(tty),
 		tea.WithAltScreen(),
