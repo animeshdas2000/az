@@ -1,4 +1,4 @@
-module github.com/animeshdas/cz
+module github.com/animeshdas/az
 
 go 1.25.1
 

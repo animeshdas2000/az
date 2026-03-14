@@ -116,7 +116,7 @@ func loadProjects() []project {
 
 	entries, err := os.ReadDir(root)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "cz: cannot read %s: %v\n", root, err)
+		fmt.Fprintf(os.Stderr, "az: cannot read %s: %v\n", root, err)
 		os.Exit(1)
 	}
 
@@ -282,7 +282,7 @@ func (m model) View() string {
 	var b strings.Builder
 
 	// ── header ────────────────────────────────────────────────────────────────
-	b.WriteString(styleHeader.Render("  cz  —  claude session jumper"))
+	b.WriteString(styleHeader.Render("  az  —  agent z"))
 	b.WriteByte('\n')
 
 	// ── search input ──────────────────────────────────────────────────────────
@@ -358,11 +358,11 @@ func main() {
 	args := os.Args[1:]
 
 	if len(args) > 0 && (args[0] == "-h" || args[0] == "--help") {
-		fmt.Println(`cz - Claude session jumper
+		fmt.Println(`az - agent z
 
 Usage:
-  cz [query]   Open Claude session matching <query> (interactive TUI).
-  cz --list    Print all session paths sorted by recency and exit.`)
+  az [query]   Open Claude session matching <query> (interactive TUI).
+  az --list    Print all session paths sorted by recency and exit.`)
 		return
 	}
 
@@ -383,7 +383,7 @@ Usage:
 	// Run TUI on /dev/tty so stdout stays clean for the shell wrapper.
 	tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "cz: cannot open /dev/tty:", err)
+		fmt.Fprintln(os.Stderr, "az: cannot open /dev/tty:", err)
 		os.Exit(1)
 	}
 
@@ -397,7 +397,7 @@ Usage:
 	result, err := p.Run()
 	tty.Close()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "cz:", err)
+		fmt.Fprintln(os.Stderr, "az:", err)
 		os.Exit(1)
 	}
 
@@ -407,7 +407,7 @@ Usage:
 	}
 
 	if _, err := os.Stat(final.chosen); os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "cz: directory no longer exists: %s\n", final.chosen)
+		fmt.Fprintf(os.Stderr, "az: directory no longer exists: %s\n", final.chosen)
 		os.Exit(1)
 	}
 
@@ -418,7 +418,7 @@ Usage:
 	if os.Getenv("CZ_EXEC") == "1" {
 		claudePath, err := exec.LookPath("claude")
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "cz: claude not found in PATH")
+			fmt.Fprintln(os.Stderr, "az: claude not found in PATH")
 			os.Exit(1)
 		}
 		os.Chdir(final.chosen)
